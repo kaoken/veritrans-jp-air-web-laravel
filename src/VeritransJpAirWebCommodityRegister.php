@@ -11,6 +11,9 @@ use AirWeb;
 class VeritransJpAirWebCommodityRegister extends Model
 {
     protected $table = 'air_web_commodity_register';
+    protected $primaryKey = 'order_id';
+    public $incrementing = false;
+
     /**
      * 複数代入する属性
      *

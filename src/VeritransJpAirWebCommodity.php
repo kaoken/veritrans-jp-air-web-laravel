@@ -15,6 +15,8 @@ class VeritransJpAirWebCommodity extends Model
 {
     protected $table = 'air_web_commodity';
     public $timestamps = false;
+    public $incrementing = false;
+
     /**
      * 複数代入する属性
      *

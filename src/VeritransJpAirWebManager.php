@@ -56,6 +56,32 @@ class VeritransJpAirWebManager extends Manager
     }
 
     /**
+     * 全角区化する。
+     * @param $str
+     */
+    protected function toD($str)
+    {
+        $str = mb_convert_kana($str,"RNASKV");
+        $ret = "";
+        $l = mb_strlen($str);
+        for($i=0;$i<$l;$i++){
+            $c = mb_substr($str,$i,1);
+            if( strlen($c) === 1 ){
+                if( $c === '"' ){
+                    $ret.="”";
+                }else if( $c === '~' ){
+                    $ret.="～";
+                }else if( $c === '\\' ){
+                    $ret.="￥";
+                }
+            }else{
+                $ret.=$c;
+            }
+        }
+        return $ret;
+    }
+
+    /**
      * AirWevの暗号鍵入手する時に表と用となる要求電文を作成する.
      * ただし、属性値に全ての値が入っているものとする
      * @param VeritransJpAirWebCommodityRegister $o
@@ -93,17 +119,17 @@ class VeritransJpAirWebManager extends Manager
 
         if( $o->settlement_type === '00' || $o->settlement_type === '02') {
             $ret['TIMELIMIT_OF_PAYMENT']       = $o->timelimit_of_payment->format('Ymd');
-            $ret['NAME1']       = $o->name1;
-            $ret['NAME2']       = $o->name2;
-            $ret['KANA1']       = $o->kana1;
-            $ret['KANA2']       = $o->kana2;
-            $ret['ADDRESS1']    = $o->address1;
+            $ret['NAME1']       = $this->toD($o->name1);
+            $ret['NAME2']       = $this->toD($o->name2);
+            $ret['KANA1']       = $this->toD($o->kana1);
+            $ret['KANA2']       = $this->toD($o->kana2);
+            $ret['ADDRESS1']    = $this->toD($o->address1);
             if( !is_null($o->address2) )
-                $ret['ADDRESS2']= $o->address2;
+                $ret['ADDRESS2']= $this->toD($o->address2);
             if( !is_null($o->address3) )
-                $ret['ADDRESS3']= $o->address3;
-            $ret['ZIP_CODE']    = $o->zip_code;
-            $ret['TELEPHONE_NO']= preg_replace("/[^0-9]/","", $user->telephone_no);
+                $ret['ADDRESS3']= $this->toD($o->address3);
+            $ret['ZIP_CODE']    = preg_replace("/[^0-9|-]/","", $o->zip_code);
+            $ret['TELEPHONE_NO']= preg_replace("/[^0-9]/","", $o->telephone_no);
             $ret['MAILADDRESS'] = $o->mailaddress;
             $ret['BIRTHDAY']    = $o->birthday->format('Ymd');
             $ret['SEX']         = $o->sex;
@@ -123,7 +149,7 @@ class VeritransJpAirWebManager extends Manager
                 $ret['COMMODITY_ID'][]    = $item->commodity_id;
                 $ret['COMMODITY_UNIT'][]  = $item->commodity_unit;
                 $ret['COMMODITY_NUM'][]   = $item->commodity_num;
-                $ret['COMMODITY_NAME'][]  = $item->commodity_name;
+                $ret['COMMODITY_NAME'][]  = $this->toD($item->commodity_name);
                 $ret['JAN_CODE'][]        = $item->jan_code;
             }
         }
@@ -158,6 +184,7 @@ class VeritransJpAirWebManager extends Manager
     /**
      * VeritransJp AirWeb から 暗号化キーを取得する。
      * 取得に失敗した場合は、戻り値のインスタンスで、`$o->err`が`true`になる。
+     * @warning 商品をこの段階で追加されていること！
      * @param VeritransJpAirWebCommodityRegister $cr
      * @return object {code:{int},item:{array},err:{bool}}
      */
@@ -166,10 +193,23 @@ class VeritransJpAirWebManager extends Manager
         $o = new \stdClass();
         $ary = $this->toAirWebPostFormat($cr);
 
+        $post = [];
+        foreach($ary as $key => $val) {
+            if (is_array($val)) {
+                foreach($val as $val2) $post[] = $key . '=' . urlencode($val2);
+            } else {
+                $post[] = $key . '=' . urlencode($val);;
+            }
+        }
+        $postdata = implode("&", $post);
+
         $res = (new Client())->request(
             'POST',
             'https://air.veritrans.co.jp/web/commodityRegist.action',
-            ['form_params'=>$ary]
+            [
+                'body' => $postdata,
+                'headers'        => ['Content-Type' => 'application/x-www-form-urlencoded']
+            ]
         );
         $cnt=0;
         $o->code = (int)$res->getStatusCode();
@@ -186,6 +226,10 @@ class VeritransJpAirWebManager extends Manager
                 else if($b[0] === 'MERCHANT_ENCRYPTION_KEY') ++$cnt;
             }
             $o->err = $cnt!==2;
+            if(!$o->err){
+                $cr->merchant_encryption_key = $o->item['MERCHANT_ENCRYPTION_KEY'];
+                $cr->browser_encryption_key = $o->item['BROWSER_ENCRYPTION_KEY'];
+            }
         }else{
             $o->err = true;
         }

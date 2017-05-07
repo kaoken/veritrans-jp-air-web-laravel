@@ -12,6 +12,8 @@ use AirWeb;
 class VeritransJpAirWebCvsPaymentNotification extends Model
 {
     protected $table = 'air_web_cvs_payment_notification';
+    public $incrementing = false;
+
     /**
      * 複数代入する属性
      *
