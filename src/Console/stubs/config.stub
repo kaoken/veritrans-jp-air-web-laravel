@@ -1,0 +1,35 @@
+<?php
+
+
+return [
+    // マーチャントID
+    'aw_merchant_id' => env('AW_MERCHANT_ID'),
+    // AWへ送信するデータの検証用ハッシュキー
+    'aw_merchant_hash_key' => env('AW_MERCHANT_HASH_KEY'),
+    // ダミー取引フラグ ダミー取引フラグ 0 = 本番; 1 = テスト
+    'aw_dummy_payment_flag' => env('AW_DUMMY_PAYMENT_FLAG', 0),
+
+    // 売り上げフラグ：1：与信・売上、0：与信のみ。指定が無い場合は、0
+    'aw_card_capture_flag' => env('AW_CARD_CAPTURE_FLAG', 1),
+    // コンビニ決済の支払期限(当日からX日後)
+    'aw_cvs_payment_limit' => env('AW_CVS_PAYMENT_LIMIT', 60),
+
+    // 商品情報の商品ID未入力時に設定するダミー値
+    'aw_dummy_commodity_id' => env('AW_DUMMY_COMMODITY_ID', 0),
+    // 品情報のJAN_CODE未入力時に設定するダミー値
+    'aw_dummy_commodity_jan_code' => env('AW_DUMMY_COMMODITY_JAN_CODE', '0'),
+    // デフォルト決済方式。00 = 両方、01 = クレジットカード、02 = コンビニ
+    'aw_settlement_type' => env('AW_SETTLEMENT_TYPE', '00'),
+
+    /**
+     * 派生した場合は、クラスを変更すること
+     */
+    // 商品登録クラス
+    'aw_commodity_class' => \Kaoken\VeritransJpAirWeb\VeritransJpAirWebCommodity::class,
+    // 単体の商品クラス
+    'aw_commodity_register_class' =>  \Kaoken\VeritransJpAirWeb\VeritransJpAirWebCommodityRegister::class,
+    // 決済完了通知クラス
+    'aw_payment_notification_class' =>  \Kaoken\VeritransJpAirWeb\VeritransJpAirWebPaymentNotification::class,
+    // コンビニ入金通知クラス
+    'aw_cvs_payment_notification_class' =>  \Kaoken\VeritransJpAirWeb\VeritransJpAirWebCvsPaymentNotification::class
+];

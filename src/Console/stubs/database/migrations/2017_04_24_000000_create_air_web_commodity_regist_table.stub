@@ -1,0 +1,84 @@
+<?php
+
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+
+class CreateAirWebCommodityRegistTable extends Migration
+{
+    /**
+     * 基本属性の追加
+     * @param Blueprint $table
+     */
+    private function addBaseAttribute(Blueprint &$table){
+
+        //! @name 必須
+        //@{
+//        $table->string('merchant_id', 22);
+        $table->string('order_id', 100);
+        $table->string('merchanthash', 64);
+        $table->string('session_id', 64);
+        $table->string('settlement_type', 2);
+        $table->unsignedInteger('amount');
+        //@}
+
+        $table->unsignedInteger('shipping_amount')->nullable()->default(0);
+        $table->date('timelimit_of_payment')->nullable();
+
+        $table->string('finish_payment_return_url', 256);
+        $table->string('unfinish_payment_return_url', 256);
+        $table->string('error_payment_return_url', 256);
+        $table->string('finish_payment_access_url', 256);
+
+        $table->unsignedTinyInteger('dummy_payment_flag');
+        $table->unsignedTinyInteger('card_capture_flag');
+
+        $table->string('merchant_encryption_key');
+        $table->string('browser_encryption_key');
+
+        //! @name ユーザー情報
+        $table->string('name1', 20)->nullable();
+        $table->string('kana1', 20)->nullable();
+        $table->string('name2', 20)->nullable();
+        $table->string('kana2', 20)->nullable();
+        $table->string('address1', 50)->nullable();
+        $table->string('address2', 50)->nullable();
+        $table->string('address3', 50)->nullable();
+        $table->string('zip_code', 8)->nullable();
+        $table->string('telephone_no', 11)->nullable();
+        $table->string('mailaddress', 50)->nullable();
+        $table->date('birthday')->nullable();
+        $table->unsignedTinyInteger('sex')->nullable();
+        //@}
+
+        $table->timestamps();
+
+        $table->timestamp('payment_notification_at')->nullable()->default(null);
+        $table->timestamp('cvs_notification_at')->nullable()->default(null);
+
+        $table->primary('order_id');
+    }
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create('air_web_commodity_register', function (Blueprint $table) {
+            $this->addBaseAttribute($table);
+            // 追加要素をこれ以降に追加する
+
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::dropIfExists('air_web_commodity_register');
+    }
+}

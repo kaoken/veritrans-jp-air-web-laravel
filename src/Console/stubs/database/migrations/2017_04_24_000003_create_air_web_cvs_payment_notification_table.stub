@@ -1,0 +1,44 @@
+<?php
+
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+
+class CreateAirWebCvsPaymentNotificationTable extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create('air_web_cvs_payment_notification', function (Blueprint $table) {
+            $table->string('order_id', 100);
+            $table->timestamp('push_time');
+            $table->unsignedInteger('push_id');
+            $table->string('csv_type', 10);
+            $table->string('receipt_no', 32);
+            $table->timestamp('receipt_date');
+            $table->unsignedInteger('rcv_amount');
+            $table->unsignedTinyInteger('dummy');
+
+            // photographers
+            $table->foreign('order_id')
+                ->references('order_id')->on('air_web_commodity_register')
+                ->onDelete('cascade');
+
+            $table->primary('order_id');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::dropIfExists('air_web_cvs_payment_notification');
+    }
+}

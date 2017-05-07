@@ -1,0 +1,47 @@
+<?php
+
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+
+class CreateAirWebCommodityTable extends Migration
+{
+    /**
+     * 基本属性の追加
+     * @param Blueprint $table
+     */
+    private function addBaseAttribute(Blueprint &$table)
+    {
+        $table->string('order_id', 100);
+        $table->string('commodity_id', 15)->nullable();
+        $table->unsignedInteger('commodity_unit')->nullable();
+        $table->unsignedTinyInteger('commodity_num')->nullable();
+        $table->string('commodity_name', 50)->nullable();
+        $table->string('jan_code', 30)->nullable();
+        // photographers
+        $table->foreign('order_id')
+            ->references('order_id')->on('air_web_commodity_register')
+            ->onDelete('cascade');
+    }
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create('air_web_commodity', function (Blueprint $table) {
+            $this->addBaseAttribute($table);
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::dropIfExists('air_web_commodity');
+    }
+}

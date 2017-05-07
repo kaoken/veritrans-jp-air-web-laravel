@@ -1,0 +1,42 @@
+<?php
+
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+
+class CreateAirWebPaymentNotificationTable extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create('air_web_payment_notification', function (Blueprint $table) {
+            $table->string('order_id', 100);
+            $table->string('status', 32);
+            $table->string('result_code', 16);
+            $table->string('err_msg');
+            $table->string('merchant_encryption_key');
+            $table->timestamp('created_at');
+
+            // photographers
+            $table->foreign('order_id')
+                ->references('order_id')->on('air_web_commodity_register')
+                ->onDelete('cascade');
+
+            $table->primary('order_id');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::dropIfExists('air_web_payment_notification');
+    }
+}
