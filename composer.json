@@ -1,7 +1,7 @@
 {
-    "name": "kaoken/veritransjp-airweb-php-laravel",
+    "name": "kaoken/veritrans-jp-air-web-laravel",
     "description": "Laravel5で使用する決済システム VeritransJp Air-Web",
-    "keywords": ["laravel", "veritransjp", "airweb"],
+    "keywords": ["laravel", "veritrans-jp", "air-web"],
     "license": "MIT",
     "homepage": "https://github.com/kaoken/veritransjp-airweb-php-laravel",
     "require": {
@@ -15,19 +15,11 @@
             "homepage": "https://github.com/kaoken/veritransjp-airweb-php-laravel"
         }
     ],
-    "require-dev": {
-        "phpunit/phpunit": "~5.7"
-    },
     "replace": {
     },
     "autoload": {
         "psr-4": {
             "Kaoken\\VeritransJpAirWeb\\": "src/"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Kaoken\\VeritransJpAirWeb\\Test\\": "tests/"
         }
     }
 }
