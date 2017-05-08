@@ -56,7 +56,7 @@ class VeritransJpAirWebManager extends Manager
     }
 
     /**
-     * 全角区化する。
+     * 特殊文字、半角英数字カナなどを全角化する。
      * @param $str
      */
     protected function toD($str)
