@@ -13,6 +13,7 @@ class VeritransJpAirWebCommodityRegister extends Model
     protected $table = 'air_web_commodity_register';
     protected $primaryKey = 'order_id';
     public $incrementing = false;
+    public $timestamps = false;
 
     /**
      * 複数代入する属性
@@ -31,7 +32,6 @@ class VeritransJpAirWebCommodityRegister extends Model
         'address1', 'address2', 'address3', 'zip_code', 'telephone_no', 'mailaddress',
         'birthday', 'sex'
     ];
-    public $timestamps = false;
 
     /**
      * 日付により変更を起こすべき属性
@@ -39,11 +39,11 @@ class VeritransJpAirWebCommodityRegister extends Model
      * @var array
      */
     protected $dates = [
-        'timelimit_of_payment', // コンビニの支払期限
-        'birthday',             // ユーザーの生年月日
-        'created_at',           // 作成日
-        'payment_notification_at',
-        'cvs_notification_at'
+        'timelimit_of_payment',     // コンビニの支払期限
+        'birthday',                 // ユーザーの生年月日
+        'created_at',               // 作成日
+        'payment_notification_at',  // 決済完了通知日
+        'cvs_notification_at'       // コンビニ入金通知日
     ];
 
     /**

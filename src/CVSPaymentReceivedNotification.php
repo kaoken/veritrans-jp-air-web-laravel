@@ -13,6 +13,7 @@ use Kaoken\VeritransJpAirWeb\Events\CVSPaymentReceivedNotificationEvent;
  */
 trait CVSPaymentReceivedNotification
 {
+
     protected function cvsPaymentReceivedNotification(Request $request)
     {
 

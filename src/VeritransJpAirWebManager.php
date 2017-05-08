@@ -7,6 +7,7 @@ namespace Kaoken\VeritransJpAirWeb;
 use Carbon\Carbon;
 use Illuminate\Support\Manager;
 use GuzzleHttp\Client;
+use Kaoken\VeritransJpAirWeb\Events\CVSPaymentDateHasPassedEvent;
 
 class VeritransJpAirWebManager extends Manager
 {
@@ -39,11 +40,49 @@ class VeritransJpAirWebManager extends Manager
     {
         $d = Carbon::now()->subDays($day);
         //$d = Carbon::now()->subMinutes($day); // テスト
-        $class = $this->getCommodityRegisterClass();
-        return $class::whereNull('payment_notification_at')
+        $clCR = $this->getCommodityRegisterClass();
+        $tblCR = (new $clCR())->getTable();
+
+        // 決済完了通知が来ていないレコードを削除
+        $clCR::whereNull('payment_notification_at')
             ->where('created_at','<',$d->format('Y-m-d H:i:s'))
             ->delete();
+
+
+        // 決済完了通知があり、かつ失敗した
+        $clPN = $this->getPaymentNotificationClass();
+        $tblPN = (new $clPN())->getTable();
+
+        $clCR::join($tblPN, $tblPN.'.order_id', '=', $tblCR.'.order_id')
+            ->where($tblPN.'.status', 'failure')
+            ->delete();
     }
+
+    /**
+     * コンビニ決済で支払期日が過ぎたオーダーを削除する
+     * そして、コンビニ決済の支払期日が過ぎたイベントも発生させる。
+     *
+     *    $schedule->call(function(){
+     *        AirWeb::deleteCvsPaymentReceivedNotification();
+     *    })->dailyAt('00:00');
+     *
+     * のように追加する。
+     * @see \App\Console\Kernel
+     * @see CVSPaymentDateHasPassedEvent
+     */
+    public function deleteCvsPaymentReceivedNotification($day=1)
+    {
+        $d = Carbon::now()->subDays($day);
+        $clCR = $this->getCommodityRegisterClass();
+        $list = $clCR::where('timelimit_of_payment','<',$d->format('Y-m-d'))
+            ->whereNotNull('payment_notification_at')
+            ->whereIn('settlement_type',['00','02'])
+            ->get();
+        foreach ($list as $item) {
+            event( new CVSPaymentDateHasPassedEvent($item) );
+            $item->delete();
+        }
+   }
 
     /**
      * このサービスのコンフィグデータを取得する

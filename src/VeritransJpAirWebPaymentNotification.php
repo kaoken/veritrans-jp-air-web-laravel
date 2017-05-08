@@ -20,9 +20,10 @@ class VeritransJpAirWebPaymentNotification extends Model
     protected $fillable = [
         'order_id', 'status',
         'result_code','err_msg',
-        'merchant_encryption_key', 'created_at'
+        'merchant_encryption_key'
     ];
     public $timestamps = false;
+    public $incrementing = false;
 
 
     /**
