@@ -12,7 +12,9 @@
   
 * 実験的に作っている物なので、このライブラリを通告なしで突然削除するかもしれない。  
 * このライブラリに関して日本ベリトランスとは関係ないので、質問、お問い合わせをしないこと。  
+* 仕様上、カードとコンビニ決済は、同時に使用できない。決済方法 '00' がそれにあたる。
 * 今のところ使用方法は説明しない。
+* 現在動作しない。
 
 
 __コンテンツの一覧__
@@ -20,18 +22,31 @@ __コンテンツの一覧__
 - [インストール](#インストール)
 - [初期設定](#初期設定)
 - [コンフィグ](#コンフィグ)
+- [ミドルウェア](#ミドルウェア)
 - [ライセンス](#ライセンス)
 
 ## インストール
 
 **composer**:
+**`composer.json` に以下のように追加：**
 
-```bash
-composer install kaoken/veritrans-jp-air-web-laravel
+```js
+  "require": {
+    "kaoken/veritrans-jp-air-web-laravel":"dev-master"
+  },
 ```
 
+
 ## 初期設定
-**`app\Console\Kernel.php` に以下のように追加：**
+### キュー
+[キュー](https://readouble.com/laravel/5.4/ja/queues.html)を使用するので、`config/queue.php`で、**必ず**有効化すること！
+
+```bash
+例 php artisan queue:work --queue=payment,default --sleep=3 --tries=3
+```
+この辺は、環境に合わせて設定を！
+
+### **`app\Console\Kernel.php` に以下のように追加：**
 
 ```php
 class Kernel extends ConsoleKernel
@@ -43,7 +58,7 @@ class Kernel extends ConsoleKernel
 }
 ```
 
-**`config\app.php` に以下のように追加：**
+### **`config\app.php` に以下のように追加：**
 
 ```php
     'providers' => [
@@ -57,16 +72,20 @@ class Kernel extends ConsoleKernel
 ];
 ```
 
-**コマンドの実行**
+#### **コマンドの実行**
 
 ```bash
 $ php artisan veritrans-jp:web-air:install
 ```
 下記の4つのファイルは`database\migrations`へ追加される。
-* `2017_04_24_000000_create_air_web_commodity_regist_table.php`
+* `2017_04_24_000000_create_air_web_payment_table.php`
+  * AirWeb決済情報テーブル
 * `2017_04_24_000001_create_air_web_commodity_table.php`
+  * 単体の商品情報テーブル
 * `2017_04_24_000002_create_air_web_payment_notification_table.php`
+  * 決済完了通知情報テーブル
 * `2017_04_24_000003_create_air_web_cvs_payment_notification_table.php`
+  * コンビニ入金通知情報テーブル
 
 個々のWebアプリに合わせて追加修正をすること。  その後
   
@@ -79,8 +98,6 @@ $ php artisan migrate
 `config\veritrans-jp-air-web.php`
 ```php
 <?php
-
-
 return [
     // マーチャントID
     'aw_merchant_id' => env('AW_MERCHANT_ID'),
@@ -98,46 +115,29 @@ return [
     'aw_dummy_commodity_id' => env('AW_DUMMY_COMMODITY_ID', 0),
     // 品情報のJAN_CODE未入力時に設定するダミー値
     'aw_dummy_commodity_jan_code' => env('AW_DUMMY_COMMODITY_JAN_CODE', '0'),
-    // デフォルト決済方式。00 = 両方、01 = クレジットカード、02 = コンビニ
-    'aw_settlement_type' => env('AW_SETTLEMENT_TYPE', '00'),
-
-<?php
-
-
-return [
-    // マーチャントID
-    'aw_merchant_id' => env('AW_MERCHANT_ID'),
-    // AWへ送信するデータの検証用ハッシュキー
-    'aw_merchant_hash_key' => env('AW_MERCHANT_HASH_KEY'),
-    // ダミー取引フラグ ダミー取引フラグ 0 = 本番; 1 = テスト
-    'aw_dummy_payment_flag' => env('AW_DUMMY_PAYMENT_FLAG', 0),
-
-    // 売り上げフラグ：1：与信・売上、0：与信のみ。指定が無い場合は、0
-    'aw_card_capture_flag' => env('AW_CARD_CAPTURE_FLAG', 1),
-    // コンビニ決済の支払期限(当日からX日後)
-    'aw_cvs_payment_limit' => env('AW_CVS_PAYMENT_LIMIT', 60),
-
-    // 商品情報の商品ID未入力時に設定するダミー値
-    'aw_dummy_commodity_id' => env('AW_DUMMY_COMMODITY_ID', 0),
-    // 品情報のJAN_CODE未入力時に設定するダミー値
-    'aw_dummy_commodity_jan_code' => env('AW_DUMMY_COMMODITY_JAN_CODE', '0'),
-    // デフォルト決済方式。00 = 両方、01 = クレジットカード、02 = コンビニ
-    'aw_settlement_type' => env('AW_SETTLEMENT_TYPE', '00'),
+    // デフォルト決済方式。01 = クレジットカード、02 = コンビニ
+    'aw_settlement_type' => env('AW_SETTLEMENT_TYPE', '01'),
 
     /**
      * 派生した場合は、クラスを変更すること
      */
-    // 商品登録クラス
-    'aw_commodity_class' => \Kaoken\VeritransJpAirWeb\VeritransJpAirWebCommodity::class,
+    // 決済クラス
+    'aw_payment_class' =>  \Kaoken\VeritransJpAirWeb\VeritransJpAirWebPayment::class,
     // 単体の商品クラス
-    'aw_commodity_register_class' =>  \Kaoken\VeritransJpAirWeb\VeritransJpAirWebCommodityRegister::class,
+    'aw_commodity_class' => \Kaoken\VeritransJpAirWeb\VeritransJpAirWebCommodity::class,
     // 決済完了通知クラス
     'aw_payment_notification_class' =>  \Kaoken\VeritransJpAirWeb\VeritransJpAirWebPaymentNotification::class,
     // コンビニ入金通知クラス
-    'aw_cvs_payment_notification_class' =>  \Kaoken\VeritransJpAirWeb\VeritransJpAirWebCvsPaymentNotification::class
+    'aw_cvs_payment_notification_class' =>  \Kaoken\VeritransJpAirWeb\VeritransJpAirWebCvsPaymentNotification::class,
+    // 決済完了通知ジョブクラス
+    'aw_payment_notification_job_class' =>  \Kaoken\VeritransJpAirWeb\Jobs\PaymentNotificationJob::class,
+    // コンビニ入金通知ジョブクラス
+    'aw_cvs_payment_notification_job_class' =>  \Kaoken\VeritransJpAirWeb\Jobs\CVSPaymentReceivedNotificationJob::class
 ];
 ```
+※ `aw_settlement_type`は、'00'選択不可能で、カードかコンビニのみ。
 
+### env
 `env` ファイルに必要に応じて追加。
 ```txt
 # Air Webへ送信するマーチャントID
@@ -149,15 +149,37 @@ AW_DUMMY_PAYMENT_FLAG=1
 # コンビニ決済の支払期限(当日からX日後)
 AW_CVS_PAYMENT_LIMIT=3
 ```
-### ミドルウェア
-`app\Http\Kernel.php`
+
+
+### タスクスケジュール
+`app\Console\Kernel.php`
+```php
+    protected function schedule(Schedule $schedule)
+    {
+        ...
+        $schedule->call(function(){
+            AirWeb::scheduleTask()->deleteNoPaymentNotification();
+            AirWeb::scheduleTask()->queueCvsDueDateHasPassed();
+        })->dailyAt('00:00');
+    }
+```
+* `AirWeb::deleteNoPaymentNotification($day=7)`は、
+現在から`$day`日過ぎた`air_web_payment`テーブルで 決済完了通知が届いていないレコードまたは、
+通知が着たが内容が失敗していた場合削除する。
+* `AirWeb::eventCvsPaymentReceivedNotification($day=3)`は、
+現在からコンビニ支払期日が`$day`日過ぎたジョブをキューに入れる。
+
+
+## ミドルウェア
+### **`app\Http\Kernel.php` に以下のように追加：**
 ```php
     protected $routeMiddleware = [
         ...
         'access_via_veritrans_jp' => \Kaoken\VeritransJpAirWeb\Middleware\AccessViaVeritransJp::class
     ];
 ```
-このルートミドルウェアは、決済完了通知、コンビニ入金通知などで、VeritransJp経由だけを許す為に使用する。強制では無い。
+このルートミドルウェアは、**決済完了通知**、**コンビニ入金通知**などで、VeritransJp経由だけを許す為に使用する。  
+使用するかしないかは、個々に任せる。
 
 ## ライセンス
 

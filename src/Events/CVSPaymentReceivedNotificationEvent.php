@@ -9,19 +9,17 @@ use Illuminate\Queue\SerializesModels;
 use Kaoken\VeritransJpAirWeb\VeritransJpAirWebCvsPaymentNotification;
 
 
-/**
- * Class AirWevCVSPaymentReceivedNotificationEvent
- */
 class CVSPaymentReceivedNotificationEvent
 {
     use SerializesModels;
     /**
-     * @var VeritransJpAirWebCvsPaymentNotification
+     * @var VeritransJpAirWebCvsPaymentNotification または、派生したクラス
      */
-    public $notification;
+    public $obj;
 
-    public function __construct(VeritransJpAirWebCvsPaymentNotification $notification)
+
+    public function __construct($obj)
     {
-        $this->notification = $notification;
+        $this->obj = $obj;
     }
 }

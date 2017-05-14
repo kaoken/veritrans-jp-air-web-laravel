@@ -12,16 +12,6 @@ use WebAir;
 class VeritransJpAirWebPaymentNotification extends Model
 {
     protected $table = 'air_web_payment_notification';
-    /**
-     * 複数代入する属性
-     *
-     * @var array
-     */
-    protected $fillable = [
-        'order_id', 'status',
-        'result_code','err_msg',
-        'merchant_encryption_key'
-    ];
     public $timestamps = false;
     public $incrementing = false;
 
@@ -43,7 +33,7 @@ class VeritransJpAirWebPaymentNotification extends Model
      */
     public function airWebCommodityRegister()
     {
-        return $this->belongsTo(AirWeb::getCommodityRegisterClass(), 'order_id', 'order_id');
+        return $this->belongsTo(AirWeb::getPaymentClass(), 'order_id', 'order_id');
     }
     // </editor-fold>
 }

@@ -13,17 +13,6 @@ class VeritransJpAirWebCvsPaymentNotification extends Model
 {
     protected $table = 'air_web_cvs_payment_notification';
     public $incrementing = false;
-
-    /**
-     * 複数代入する属性
-     *
-     * @var array
-     */
-    protected $fillable = [
-        'order_id', 'push_time',
-        'push_id','csv_type',
-        'receipt_no', 'receipt_date','rcv_amount', 'dummy'
-    ];
     public $timestamps = false;
 
 
@@ -44,7 +33,7 @@ class VeritransJpAirWebCvsPaymentNotification extends Model
      */
     public function airWebCommodityRegister()
     {
-        return $this->belongsTo(AirWeb::getCommodityRegisterClass(), 'order_id', 'order_id');
+        return $this->belongsTo(AirWeb::getPaymentClass(), 'order_id', 'order_id');
     }
     // </editor-fold>
 }

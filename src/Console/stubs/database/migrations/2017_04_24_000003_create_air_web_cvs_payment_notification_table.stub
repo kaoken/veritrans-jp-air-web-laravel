@@ -25,7 +25,7 @@ class CreateAirWebCvsPaymentNotificationTable extends Migration
 
             // photographers
             $table->foreign('order_id')
-                ->references('order_id')->on('air_web_commodity_register')
+                ->references('order_id')->on('air_web_payment')
                 ->onDelete('cascade');
 
             $table->primary('order_id');

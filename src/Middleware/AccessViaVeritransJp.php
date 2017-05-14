@@ -1,7 +1,8 @@
 <?php
 /**
  * VeritransJp経由のアクセスか？ 判定するミドルウェア
- * なりすまし対策
+ * ・なりすまし対策
+ * このミドルウェアは、使うほどでも無いが・・・
  */
 namespace Kaoken\VeritransJpAirWeb\Middleware;
 
@@ -22,10 +23,14 @@ class AccessViaVeritransJp
             $this->inExceptArray($request) ||
             $this->tokensMatch($request)
         ) {
-            if( $request->ip() === '210.239.44.142')
+            // ホスト cvs.veritrans.co.jp
+            // IP　　 210.239.44.160
+            if( $request->ip() === '210.239.44.160')
+                return $next($request);
+            else if( gethostbyaddr($request->ip()) === 'cvs.veritrans.co.jp')
                 return $next($request);
         }
 
-        abort(404);
+        return response('Unauthorized.', 404);
     }
 }

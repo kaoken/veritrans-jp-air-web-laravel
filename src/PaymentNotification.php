@@ -8,69 +8,49 @@ namespace Kaoken\VeritransJpAirWeb;
 use AirWeb;
 use Carbon\Carbon;
 use Log;
+use Validator;
 use Illuminate\Http\Request;
 use Kaoken\VeritransJpAirWeb\Events\PaymentNotificationEvent;
 
-/**
- * Trait AirWevPaymentNotification
- */
+
 trait PaymentNotification
 {
-    /**
-     * `paymentNotification`メソッド内から呼び出される。エラー時は、例外を投げること
-     * @see paymentNotification
-     * @warning `$obj`は、このメソッドが呼ばれた後、`->save();`される。
-     * @param \Kaoken\VeritransJpAirWeb\VeritransJpAirWebPaymentNotification $obj
-     * @throws \Exception
-     */
-    abstract protected function paymentNotificationCall(&$obj);
 
     /**
      * Veritrans Jp AirWeb で、決済完了通知を受け取り、正しく処理ができた場合は HTTPステータスコード200を返す。
-     * このとき、成功した場合、イベントを発生させている
-     * @see PaymentNotificationEvent
+     * このとき、成功した場合、一度キューに入れる
+     * @see PaymentNotificationJob
      * @param Request $request
      * @return \Illuminate\Contracts\Routing\ResponseFactory|\Symfony\Component\HttpFoundation\Response
      */
     protected function paymentNotification(Request $request)
     {
         $all = $request->all();
+
+        // <editor-fold desc="Validatorは、後で削除するかもしれない">
         $validator = Validator::make($all,[
-            'orderId' => 'required',
-            'mStatus' => 'required',
-            'vResultCode' => 'required',
+            'orderId' => 'required|max:100|regex:/^[-_\w]+$/',
+            'mStatus' => 'required|string|max:32|regex:/^[\w]+$/',
+            'vResultCode' => 'required|string|max:16|regex:/^[\w]+$/',
             'mErrMsg' => 'required',
-            'merchantEncryptionKey' => 'required'
+            'merchantEncryptionKey' => 'required|regex:/^[-+_\w\/]+$/'
         ]);
-
+        // merchantEncryptionKeyは、記号がさらに +/ が必要 Base64 フォーマットかな
         if ($validator->fails()) {
-            $a['request'] = $request;
+            $a['post'] = $all;
             $a['error'] = $validator->errors()->all();
-            Log::error("Veritrans Jp 決済完了通知", $a);
-            return response('',422);
+            Log::error("Veritrans Jp 決済完了通知 [Validator]", $a);
+            return response('',400);
         }
-        $class = AirWeb::getPaymentNotificationClass();
-        $obj = new $class();
+        // </editor-fold>
 
-        $obj->order_id      = $all['orderId'];
-        $obj->status        = $all['mStatus'];
-        $obj->result_code   = $all['vResultCode'];
-        $obj->err_msg       = $all['mErrMsg'];
-        $obj->merchant_encryption_key = $all['merchantEncryptionKey'];
-        $obj->created_at    = Carbon::now();
 
-        try{
-            $this->paymentNotificationCall($obj);
-            $obj->save();
-        }catch (\Exception $e){
-            $a['request'] = $request;
-            $a['error'] = $e->getMessage();
-            Log::error("Veritrans Jp 決済完了通知",$a);
-            return response('',422);
-        }
+        $class = AirWeb::getPaymentNotificationJobClass();
 
-        Log::info("Veritrans Jp 決済完了通知", $request);
-        event(new PaymentNotificationEvent($obj));
+        $job = new $class($all, $request->ip());
+        dispatch($job->onQueue('payment'));
+
+        //Log::info("Veritrans Jp 決済完了通知");
         return response('',200);
     }
 }

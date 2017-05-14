@@ -14,13 +14,13 @@ class CVSPaymentDateHasPassedEvent
 {
     use SerializesModels;
     /**
-     * @var VeritransJpAirWebCommodityRegister
+     * @var VeritransJpAirWebPayment
      */
     public $commodityRegister;
 
     /**
      * コンビニでの支払期日を過ぎた オーダーIDをセットする
-     * @param VeritransJpAirWebCommodityRegister $commodityRegister
+     * @param VeritransJpAirWebPayment $commodityRegister
      */
     public function __construct($commodityRegister)
     {

@@ -16,20 +16,20 @@ use Kaoken\VeritransJpAirWeb\VeritransJpAirWebPaymentNotification;
  * @param \Kaoken\VeritransJpAirWeb\VeritransJpAirWebPaymentNotification $obj
  * @throws \Exception
  */
-class PaymentNotificationEvent
+class CvsDueDateHasPassed
 {
     use SerializesModels;
     /**
      * @var VeritransJpAirWebPaymentNotification または、派生したクラス
      */
-    public $obj;
+    public $objs;
 
     /**
      * PaymentNotificationEvent constructor.
      * @param VeritransJpAirWebPaymentNotification $obj 派生した物など
      */
-    public function __construct($obj)
+    public function __construct($objs)
     {
-        $this->obj = $obj;
+        $this->objs = $objs;
     }
 }

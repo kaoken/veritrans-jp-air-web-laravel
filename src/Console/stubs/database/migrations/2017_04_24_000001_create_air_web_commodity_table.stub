@@ -20,7 +20,7 @@ class CreateAirWebCommodityTable extends Migration
         $table->string('jan_code', 30)->nullable();
         // photographers
         $table->foreign('order_id')
-            ->references('order_id')->on('air_web_commodity_register')
+            ->references('order_id')->on('air_web_payment')
             ->onDelete('cascade');
     }
     /**

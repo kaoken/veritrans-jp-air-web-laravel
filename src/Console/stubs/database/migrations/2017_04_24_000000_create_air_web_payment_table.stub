@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateAirWebCommodityRegistTable extends Migration
+class CreateAirWebPaymentTable extends Migration
 {
     /**
      * 基本属性の追加
@@ -23,7 +23,7 @@ class CreateAirWebCommodityRegistTable extends Migration
         //@}
 
         $table->unsignedInteger('shipping_amount')->nullable()->default(0);
-        $table->date('timelimit_of_payment')->nullable();
+        $table->date('timelimit_of_payment')->nullable()->default(null);
 
         $table->string('finish_payment_return_url', 256);
         $table->string('unfinish_payment_return_url', 256);
@@ -55,6 +55,7 @@ class CreateAirWebCommodityRegistTable extends Migration
 
         $table->timestamp('payment_notification_at')->nullable()->default(null);
         $table->timestamp('cvs_notification_at')->nullable()->default(null);
+        $table->timestamp('paid_at')->nullable()->default(null);
 
         $table->primary('order_id');
     }
@@ -65,7 +66,7 @@ class CreateAirWebCommodityRegistTable extends Migration
      */
     public function up()
     {
-        Schema::create('air_web_commodity_register', function (Blueprint $table) {
+        Schema::create('air_web_payment', function (Blueprint $table) {
             $this->addBaseAttribute($table);
             // 追加要素をこれ以降に追加する
 
@@ -79,6 +80,6 @@ class CreateAirWebCommodityRegistTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('air_web_commodity_register');
+        Schema::dropIfExists('air_web_payment');
     }
 }

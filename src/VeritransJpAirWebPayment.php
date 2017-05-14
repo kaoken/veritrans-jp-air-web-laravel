@@ -8,42 +8,18 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use AirWeb;
 
-class VeritransJpAirWebCommodityRegister extends Model
+class VeritransJpAirWebPayment extends Model
 {
-    protected $table = 'air_web_commodity_register';
+    protected $table = 'air_web_payment';
     protected $primaryKey = 'order_id';
     public $incrementing = false;
-    public $timestamps = false;
 
-    /**
-     * 複数代入する属性
-     *
-     * @var array
-     */
-    protected $fillable = [
-        'merchanthash', 'session_id','settlement_type', 'order_id', 'amount',
-        'shipping_fee','timelimit_of_payment',
-
-        'finish_payment_return_url', 'unfinish_payment_return_url','error_payment_return_url', 'finish_payment_access_url',
-
-        'merchant_encryption_key','browser_encryption_key',
-
-        'dummy_payment_flag', 'card_capture_flag', 'name1', 'kana1', 'name2', 'kana2',
-        'address1', 'address2', 'address3', 'zip_code', 'telephone_no', 'mailaddress',
-        'birthday', 'sex'
-    ];
-
-    /**
-     * 日付により変更を起こすべき属性
-     *
-     * @var array
-     */
     protected $dates = [
         'timelimit_of_payment',     // コンビニの支払期限
         'birthday',                 // ユーザーの生年月日
-        'created_at',               // 作成日
         'payment_notification_at',  // 決済完了通知日
-        'cvs_notification_at'       // コンビニ入金通知日
+        'cvs_notification_at',      // コンビニ入金通知日
+        'paid_at'                   // 支払いを確認をした日時
     ];
 
     /**
@@ -58,7 +34,7 @@ class VeritransJpAirWebCommodityRegister extends Model
             $this->resetSettlementType();
             $this->dummy_payment_flag = env('AW_DUMMY_PAYMENT_FLAG',1);
             $this->card_capture_flag = env('AW_CARD_CAPTURE_FLAG', 1);
-            if($this->settlement_type === '00' || $this->payment_type === '02')
+            if($this->payment_type === '02')
                 $this->timelimit_of_payment = Carbon::now()->addDays(env('AW_CVS_PAYMENT_LIMIT', 60));
             else
                 $this->timelimit_of_payment = null;
@@ -73,7 +49,8 @@ class VeritransJpAirWebCommodityRegister extends Model
      */
     public function save(array $options = [])
     {
-        $c = VeritransJpAirWebCommodityRegister::where('order_id',$this->order_id)
+        $class = AirWeb::getPaymentClass();
+        $c = $class::where('order_id',$this->order_id)
             ->count();
         if( $c === 0 )
             $this->created_at = Carbon::now();
@@ -86,14 +63,9 @@ class VeritransJpAirWebCommodityRegister extends Model
      */
     protected function resetSettlementType()
     {
-        $i = env('AW_SETTLEMENT_TYPE','00');
-        $t = '00';
-        switch($i){
-            case 1: $t='01';break;
-            case 2: $t='02';break;
-            default:$t='00';
-        }
-        $this->settlement_type = $t;
+        $i = env('AW_SETTLEMENT_TYPE','01');
+        if($i!=='02')$i='01';
+        $this->settlement_type = $i;
     }
 
 
@@ -110,7 +82,8 @@ class VeritransJpAirWebCommodityRegister extends Model
      */
     public function createCommodity($id,$unit,$num,$name,$code)
     {
-        $c = VeritransJpAirWebCommodityRegister::where('order_id',$this->order_id)
+        $class = AirWeb::getPaymentClass();
+        $c = $class::where('order_id',$this->order_id)
             ->count();
         if( $c !== 1 ){
             throw new \Exception('オーダーが保存されてない状態で`createCommodity`を呼び出した。');

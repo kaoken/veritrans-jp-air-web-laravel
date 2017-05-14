@@ -17,16 +17,6 @@ class VeritransJpAirWebCommodity extends Model
     public $timestamps = false;
     public $incrementing = false;
 
-    /**
-     * 複数代入する属性
-     *
-     * @var array
-     */
-    protected $fillable = [
-        'order_id',
-        'commodity_id','commodity_unit','commodity_num','commodity_name','jan_code'
-    ];
-
     // <editor-fold desc="リレーション定義">
     /**
      * AirWebの商品群
@@ -34,7 +24,7 @@ class VeritransJpAirWebCommodity extends Model
      */
     public function airWebCommodityRegister()
     {
-        return $this->belongsTo(AirWeb::getCommodityRegisterClass(), 'order_id', 'order_id');
+        return $this->belongsTo(AirWeb::getPaymentClass(), 'order_id', 'order_id');
     }
     // </editor-fold>
 

@@ -18,18 +18,22 @@ return [
     'aw_dummy_commodity_id' => env('AW_DUMMY_COMMODITY_ID', 0),
     // 品情報のJAN_CODE未入力時に設定するダミー値
     'aw_dummy_commodity_jan_code' => env('AW_DUMMY_COMMODITY_JAN_CODE', '0'),
-    // デフォルト決済方式。00 = 両方、01 = クレジットカード、02 = コンビニ
-    'aw_settlement_type' => env('AW_SETTLEMENT_TYPE', '00'),
+    // デフォルト決済方式。01 = クレジットカード、02 = コンビニ
+    'aw_settlement_type' => env('AW_SETTLEMENT_TYPE', '01'),
 
     /**
      * 派生した場合は、クラスを変更すること
      */
-    // 商品登録クラス
-    'aw_commodity_class' => \Kaoken\VeritransJpAirWeb\VeritransJpAirWebCommodity::class,
+    // 決済クラス
+    'aw_payment_class' =>  \Kaoken\VeritransJpAirWeb\VeritransJpAirWebPayment::class,
     // 単体の商品クラス
-    'aw_commodity_register_class' =>  \Kaoken\VeritransJpAirWeb\VeritransJpAirWebCommodityRegister::class,
+    'aw_commodity_class' => \Kaoken\VeritransJpAirWeb\VeritransJpAirWebCommodity::class,
     // 決済完了通知クラス
     'aw_payment_notification_class' =>  \Kaoken\VeritransJpAirWeb\VeritransJpAirWebPaymentNotification::class,
     // コンビニ入金通知クラス
-    'aw_cvs_payment_notification_class' =>  \Kaoken\VeritransJpAirWeb\VeritransJpAirWebCvsPaymentNotification::class
+    'aw_cvs_payment_notification_class' =>  \Kaoken\VeritransJpAirWeb\VeritransJpAirWebCvsPaymentNotification::class,
+    // 決済完了通知ジョブクラス
+    'aw_payment_notification_job_class' =>  \Kaoken\VeritransJpAirWeb\Jobs\PaymentNotificationJob::class,
+    // コンビニ入金通知ジョブクラス
+    'aw_cvs_payment_notification_job_class' =>  \Kaoken\VeritransJpAirWeb\Jobs\CVSPaymentReceivedNotificationJob::class
 ];
