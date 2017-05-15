@@ -382,7 +382,7 @@ class AirWebController extends Controller
     public function getUnFinishPayment(Request $request)
     {
         return redirect('/');
-
+    }
     /**
      * 決済エラー時の移動先
      * @param Request $request
@@ -409,16 +409,12 @@ Route::group([
         Route::post('cvs-payment-received','AirWebController@postCVSPaymentReceivedNotification' );
     }
 );
-Route::group([],
-    function() {
-        // 正常に支払い手続きが終了した購入者へ表示するURL
-        Route::post('payment/finish','AirWebController@postFinishPayment' );
-        // 決済入力画面から「戻る」をクリックした購入者へ表示する
-        Route::get('payment/unfinish'AirWebController@getUnFinishPayment' );
-        // 正常に支払い手続きが終了しなかった購入者へ表示する
-        Route::post('payment/error','AirWebController@postErrorPayment' );
-    }
-);
+// 正常に支払い手続きが終了した購入者へ表示するURL
+Route::post('payment/finish','AirWebController@postFinishPayment' );
+// 決済入力画面から「戻る」をクリックした購入者へ表示する
+Route::get('payment/unfinish','AirWebController@getUnFinishPayment' );
+// 正常に支払い手続きが終了しなかった購入者へ表示する
+Route::post('payment/error','AirWebController@postErrorPayment' );
 ```
 ミドルウェアを使用しない場合は、ミドルウェア`access_via_veritrans_jp`を空に。
 
