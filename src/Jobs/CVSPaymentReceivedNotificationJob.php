@@ -7,7 +7,7 @@ namespace Kaoken\VeritransJpAirWeb\Jobs;
 
 use Carbon\Carbon;
 use Kaoken\VeritransJpAirWeb\Events\CVSPaymentReceivedNotificationEvent;
-use Kaoken\VeritransJpAirWeb\VeritransJpAirWebCvsPaymentNotification;
+use Kaoken\VeritransJpAirWeb\VeritransJpAirWebCVSPaymentNotification;
 
 use AirWeb;
 use DB;
@@ -39,7 +39,7 @@ class CVSPaymentReceivedNotificationJob implements ShouldQueue
      * `orderId`,`cvsType`,`receiptNo`,`receiptDate`,`rcvAmount`,`dummy`
      * @var array
      */
-    protected $items;
+    public $items;
 
 
     /**
@@ -59,7 +59,14 @@ class CVSPaymentReceivedNotificationJob implements ShouldQueue
     {
 //        Log::info("Veritrans Jp コンビニ入金通知");
         DB::transaction(function() {
-            $class = AirWeb::getCvsPaymentNotificationClass();
+            $class = AirWeb::getCVSPaymentNotificationClass();
+            // 既に通知済みの場合は、無視する
+            $c = $class::where('order_id')->count();
+            if( $c > 0 ){
+                Log::warning('既に存在するコンビニ入金通知です。',['post'=>$this->items]);
+                return;
+            }
+
             $obj = new $class();
             $obj->push_time     = Carbon::createFromFormat('YmdHis', $this->items['pushTime']);
             $obj->push_id       = $this->items['pushId'];
@@ -72,20 +79,5 @@ class CVSPaymentReceivedNotificationJob implements ShouldQueue
             event(new CVSPaymentReceivedNotificationEvent($obj));
             $obj->save();
         });
-    }
-
-    /**
-     * 失敗したジョブの処理
-     * @param \Exception $exception
-     */
-    public function failed(\Exception $exception)
-    {
-        $a['item'] = $this->items;
-        $a['error']['msg'] = $e->getMessage();
-        $a['error']['code'] = $e->getCode();
-        $a['error']['file'] = $e->getFile();
-        $a['error']['line'] = $e->getLine();
-        $a['error']['trace'] = $e->getTrace();
-        Log::error("Veritrans Jp コンビニ入金通知",$a);
     }
 }

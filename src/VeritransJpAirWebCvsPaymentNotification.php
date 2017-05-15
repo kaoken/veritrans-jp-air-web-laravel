@@ -9,9 +9,10 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use AirWeb;
 
-class VeritransJpAirWebCvsPaymentNotification extends Model
+class VeritransJpAirWebCVSPaymentNotification extends Model
 {
     protected $table = 'air_web_cvs_payment_notification';
+    protected $primaryKey = 'order_id';
     public $incrementing = false;
     public $timestamps = false;
 

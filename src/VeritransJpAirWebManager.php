@@ -7,7 +7,6 @@ namespace Kaoken\VeritransJpAirWeb;
 use Carbon\Carbon;
 use Illuminate\Support\Manager;
 use GuzzleHttp\Client;
-use Kaoken\VeritransJpAirWeb\Events\CVSPaymentDateHasPassedEvent;
 
 class VeritransJpAirWebManager extends Manager
 {
@@ -25,7 +24,7 @@ class VeritransJpAirWebManager extends Manager
     public function scheduleTask()
     {
         if(is_null($this->task)){
-            $this->task = new VeritransJpAirWebScheduleTask();
+            $this->task = new VeritransJpAirWebScheduleTask($this);
         }
         return $this->task;
     }
@@ -267,7 +266,7 @@ class VeritransJpAirWebManager extends Manager
      * コンビニ決済入金通知クラスを返す
      * @return string
      */
-    public function getCvsPaymentNotificationClass()
+    public function getCVSPaymentNotificationClass()
     {
         return $this->getMyConfig('aw_cvs_payment_notification_class');
     }
@@ -285,7 +284,7 @@ class VeritransJpAirWebManager extends Manager
      * コンビニ決済入金通知ジョブクラスを返す
      * @return string
      */
-    public function getCvsPaymentNotificationJobClass()
+    public function getCVSPaymentNotificationJobClass()
     {
         return $this->getMyConfig('aw_cvs_payment_notification_job_class');
     }

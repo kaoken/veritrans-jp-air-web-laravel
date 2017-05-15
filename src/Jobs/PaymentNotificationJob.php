@@ -9,7 +9,7 @@ use Carbon\Carbon;
 use Log;
 use DB;
 use Kaoken\VeritransJpAirWeb\Events\PaymentNotificationEvent;
-use Kaoken\VeritransJpAirWeb\VeritransJpAirWebCvsPaymentNotification;
+use Kaoken\VeritransJpAirWeb\VeritransJpAirWebCVSPaymentNotification;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\SerializesModels;
@@ -34,7 +34,7 @@ class PaymentNotificationJob implements ShouldQueue
      * `orderId`,`mStatus`,`vResultCode`,`mErrMsg`,`merchantEncryptionKey`
      * @var array
      */
-    protected $items;
+    public $items;
 
 
     /**
@@ -72,20 +72,5 @@ class PaymentNotificationJob implements ShouldQueue
         });
 
 //        Log::info("Veritrans Jp 決済完了通知 正常終了");
-    }
-
-    /**
-     * 失敗したジョブの処理
-     * @param \Exception $exception
-     */
-    public function failed(\Exception $e)
-    {
-        $a['item'] = $this->items;
-        $a['error']['msg'] = $e->getMessage();
-        $a['error']['code'] = $e->getCode();
-        $a['error']['file'] = $e->getFile();
-        $a['error']['line'] = $e->getLine();
-        $a['error']['trace'] = $e->getTrace();
-        Log::error("Veritrans Jp 決済完了通知",$a);
     }
 }

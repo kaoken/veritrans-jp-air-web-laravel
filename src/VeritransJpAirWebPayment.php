@@ -146,9 +146,9 @@ class VeritransJpAirWebPayment extends Model
      * コンビニ入金通知
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function airWebCvsPaymentNotification()
+    public function airWebCVSPaymentNotification()
     {
-        return $this->hasOne(AirWeb::getCvsPaymentNotificationClass(),'order_id', 'order_id');
+        return $this->hasOne(AirWeb::getCVSPaymentNotificationClass(),'order_id', 'order_id');
     }
     // </editor-fold>
 }

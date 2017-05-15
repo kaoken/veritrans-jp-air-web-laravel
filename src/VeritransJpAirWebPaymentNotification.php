@@ -12,6 +12,7 @@ use WebAir;
 class VeritransJpAirWebPaymentNotification extends Model
 {
     protected $table = 'air_web_payment_notification';
+    protected $primaryKey = 'order_id';
     public $timestamps = false;
     public $incrementing = false;
 

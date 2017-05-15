@@ -31,7 +31,7 @@ return [
     // 決済完了通知クラス
     'aw_payment_notification_class' =>  \Kaoken\VeritransJpAirWeb\VeritransJpAirWebPaymentNotification::class,
     // コンビニ入金通知クラス
-    'aw_cvs_payment_notification_class' =>  \Kaoken\VeritransJpAirWeb\VeritransJpAirWebCvsPaymentNotification::class,
+    'aw_cvs_payment_notification_class' =>  \Kaoken\VeritransJpAirWeb\VeritransJpAirWebCVSPaymentNotification::class,
     // 決済完了通知ジョブクラス
     'aw_payment_notification_job_class' =>  \Kaoken\VeritransJpAirWeb\Jobs\PaymentNotificationJob::class,
     // コンビニ入金通知ジョブクラス

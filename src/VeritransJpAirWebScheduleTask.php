@@ -5,8 +5,26 @@
  */
 namespace Kaoken\VeritransJpAirWeb;
 
+
+use Carbon\Carbon;
+use Kaoken\VeritransJpAirWeb\Jobs\CVSDueDateHasPassedJob;
+
 class VeritransJpAirWebScheduleTask
 {
+    /**
+     * @var VeritransJpAirWebManager
+     */
+    protected $mgr;
+
+    /**
+     * VeritransJpAirWebScheduleTask constructor.
+     * @param VeritransJpAirWebManager $mgr
+     */
+    public function __construct(VeritransJpAirWebManager $mgr)
+    {
+        $this->mgr = $mgr;
+    }
+
     /**
      * 現在から`$day`過ぎた`air_web_payment`テーブルで
      * 決済完了通知が届いていない項目を削除する。
@@ -25,7 +43,7 @@ class VeritransJpAirWebScheduleTask
     {
         $d = Carbon::now()->subDays($day);
         //$d = Carbon::now()->subMinutes($day); // テスト
-        $clCR = $this->getPaymentClass();
+        $clCR = $this->mgr->getPaymentClass();
         $tblCR = (new $clCR())->getTable();
 
         // 決済完了通知が来ていないレコードを削除
@@ -35,8 +53,8 @@ class VeritransJpAirWebScheduleTask
 
 
         // 決済完了通知があり、かつ失敗した
-        $clPN = $this->getPaymentNotificationClass();
-        $tblPN = (new $clPN())->getTable();
+        $clPaymentN = $this->mgr->getPaymentNotificationClass();
+        $tblPN = (new $clPaymentN())->getTable();
 
         $clCR::join($tblPN, $tblPN.'.order_id', '=', $tblCR.'.order_id')
             ->where($tblPN.'.status', 'failure')
@@ -44,28 +62,31 @@ class VeritransJpAirWebScheduleTask
     }
 
     /**
-     * コンビニ決済で支払期日が過ぎたオーダーを削除する
-     * そして、コンビニ決済の支払期日が過ぎたイベントも発生させる。
+     * コンビニ決済で支払期日が過ぎた決済をジョブへ
      *
      *    $schedule->call(function(){
-     *        AirWeb::scheduleTask()->queueCvsDueDateHasPassed();
+     *        AirWeb::scheduleTask()->queueCVSDueDateHasPassed();
      *    })->dailyAt('00:00');
      *
      * のように追加する。
      * @see \App\Console\Kernel
-     * @see CVSPaymentDateHasPassedEvent
+     * @see  CVSDueDateHasPassedJob
      */
-    public function queueCvsDueDateHasPassed($day=1)
+    public function queueCVSDueDateHasPassed($day=1)
     {
         $d = Carbon::now()->subDays($day);
-        $clCR = $this->getPaymentClass();
-        $list = $clCR::where('timelimit_of_payment','<',$d->format('Y-m-d'))
+        $clPayment = $this->mgr->getPaymentClass();
+        $list = $clPayment::where('timelimit_of_payment','<',$d->format('Y-m-d'))
             ->whereNotNull('payment_notification_at')
-            ->whereIn('settlement_type',['00','02'])
+            ->whereNull('cvs_notification_at')
+            ->whereIn('settlement_type',['02'])
             ->get();
+
+        // 期限切れを コンビニ通知期限切れジョブへ
+        $clCvsPN = $this->mgr->getCVSPaymentNotificationJobClass();
         foreach ($list as $item) {
-            event( new CVSPaymentDateHasPassedEvent($item) );
-            $item->delete();
+            $job = new $clCvsPN($item);
+            dispatch($job->onQueue('payment'));
         }
     }
 }

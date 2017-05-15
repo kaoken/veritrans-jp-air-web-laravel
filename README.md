@@ -13,8 +13,7 @@
 * 実験的に作っている物なので、このライブラリを通告なしで突然削除するかもしれない。  
 * このライブラリに関して日本ベリトランスとは関係ないので、質問、お問い合わせをしないこと。  
 * 仕様上、カードとコンビニ決済は、同時に使用できない。決済方法 '00' がそれにあたる。
-* 今のところ使用方法は説明しない。
-* 現在動作しない。
+* 今のところ詳しい使用方法は説明しない。
 
 
 __コンテンツの一覧__
@@ -23,6 +22,7 @@ __コンテンツの一覧__
 - [初期設定](#初期設定)
 - [コンフィグ](#コンフィグ)
 - [ミドルウェア](#ミドルウェア)
+- [イベント](#イベント)
 - [ライセンス](#ライセンス)
 
 ## インストール
@@ -92,7 +92,7 @@ $ php artisan veritrans-jp:web-air:install
 ```bash
 $ php artisan migrate
 ```
-
+※ ディレクトリの`config`へ`veritrans-jp-air-web.php`というコンフィグファイルが作成される。
 
 ## コンフィグ
 `config\veritrans-jp-air-web.php`
@@ -128,7 +128,7 @@ return [
     // 決済完了通知クラス
     'aw_payment_notification_class' =>  \Kaoken\VeritransJpAirWeb\VeritransJpAirWebPaymentNotification::class,
     // コンビニ入金通知クラス
-    'aw_cvs_payment_notification_class' =>  \Kaoken\VeritransJpAirWeb\VeritransJpAirWebCvsPaymentNotification::class,
+    'aw_cvs_payment_notification_class' =>  \Kaoken\VeritransJpAirWeb\VeritransJpAirWebCVSPaymentNotification::class,
     // 決済完了通知ジョブクラス
     'aw_payment_notification_job_class' =>  \Kaoken\VeritransJpAirWeb\Jobs\PaymentNotificationJob::class,
     // コンビニ入金通知ジョブクラス
@@ -147,7 +147,7 @@ AW_MERCHANT_HASH_KEY=
 # ダミー取引フラグ ダミー取引フラグ 0 = 本番; 1 = テスト
 AW_DUMMY_PAYMENT_FLAG=1
 # コンビニ決済の支払期限(当日からX日後)
-AW_CVS_PAYMENT_LIMIT=3
+AW_CVS_PAYMENT_LIMIT=7
 ```
 
 
@@ -159,15 +159,15 @@ AW_CVS_PAYMENT_LIMIT=3
         ...
         $schedule->call(function(){
             AirWeb::scheduleTask()->deleteNoPaymentNotification();
-            AirWeb::scheduleTask()->queueCvsDueDateHasPassed();
+            AirWeb::scheduleTask()->queueCVSDueDateHasPassed();
         })->dailyAt('00:00');
     }
 ```
 * `AirWeb::deleteNoPaymentNotification($day=7)`は、
 現在から`$day`日過ぎた`air_web_payment`テーブルで 決済完了通知が届いていないレコードまたは、
 通知が着たが内容が失敗していた場合削除する。
-* `AirWeb::eventCvsPaymentReceivedNotification($day=3)`は、
-現在からコンビニ支払期日が`$day`日過ぎたジョブをキューに入れる。
+* `AirWeb::eventCVSPaymentReceivedNotification($day=1)`は、
+現在からコンビニ支払期日が`$day`日過ぎたジョブをキューに入れる。その後イベントが呼び出され、Webアプリごとに調整する。
 
 
 ## ミドルウェア
@@ -180,6 +180,136 @@ AW_CVS_PAYMENT_LIMIT=3
 ```
 このルートミドルウェアは、**決済完了通知**、**コンビニ入金通知**などで、VeritransJp経由だけを許す為に使用する。  
 使用するかしないかは、個々に任せる。
+
+## イベント
+* `Kaoken\VeritransJpAirWeb\Events\CVSDueDateHasPassed`
+  * `Kaoken\VeritransJpAirWeb\Jobs\CVSDueDateHasPassedJob`から呼び出される。
+  * コンビニ決済で、入金期日が過ぎたイベント
+* `Kaoken\VeritransJpAirWeb\Events\CVSPaymentReceivedNotificationEvent`
+  * `Kaoken\VeritransJpAirWeb\Jobs\CVSPaymentReceivedNotificationJob`から呼び出される。
+  * コンビニエンスストア、入金通知イベント
+* `Kaoken\VeritransJpAirWeb\Events\PaymentNotificationEvent`
+  * `Kaoken\VeritransJpAirWeb\Jobs\PaymentNotificationJob`から呼び出される。
+  * 決済完了通知イベント
+
+**下記は、使用テンプレート例** `app\Listeners`へ追加
+```PaymentEventSubscriber.php 
+<?php
+/**
+ * 決済 リスナー
+ */
+namespace App\Listeners;
+
+use AirWeb;
+use Log;
+use Carbon\Carbon;
+use Kaoken\VeritransJpAirWeb\Events\ CVSDueDateHasPassed;
+use Kaoken\VeritransJpAirWeb\Events\CVSPaymentReceivedNotificationEvent;
+use Kaoken\VeritransJpAirWeb\Events\PaymentNotificationEvent;
+
+class PaymentEventSubscriber
+{
+    /**
+     * 購読するリスナーの登録
+     * @param \Illuminate\Events\Dispatcher $events
+     */
+    public function subscribe($events)
+    {
+        // コンビニ入金期日を過ぎた
+        $events->listen(
+            'Kaoken\VeritransJpAirWeb\Events\CVSDueDateHasPassed',
+            'App\Listeners\PaymentEventSubscriber@onCVSDueDateHasPassed'
+        );
+        // コンビニエンスストア、入金通知
+        $events->listen(
+            'Kaoken\VeritransJpAirWeb\Events\CVSPaymentReceivedNotificationEvent',
+            'App\Listeners\PaymentEventSubscriber@onCVSPaymentReceivedNotification'
+        );
+        // 決済完了通知
+        $events->listen(
+            'Kaoken\VeritransJpAirWeb\Events\PaymentNotificationEvent',
+            'App\Listeners\PaymentEventSubscriber@onPaymentNotification'
+        );
+    }
+
+    /**
+     * コンビニ入金期日を過ぎた
+     * @param CVSDueDateHasPassed $event
+     */
+    public function onCVSDueDateHasPassed(CVSDueDateHasPassed $event)
+    {
+
+    }
+
+    /**
+     * コンビニエンスストア、入金通知
+     * @param CVSPaymentReceivedNotificationEvent $event
+     * @throws \Exception 
+     * @note 例外後、`failed_jobs`テーブルへ追加される。
+     */
+    public function onCVSPaymentReceivedNotification(CVSPaymentReceivedNotificationEvent $event)
+    {
+        $obj = $event->obj;
+
+    }
+
+    /**
+     * 決済完了通知
+     * @param PaymentNotificationEvent $event
+     * @throws \Exception
+     */
+    public function onPaymentNotification(PaymentNotificationEvent $event)
+    {
+        $obj = $event->obj;
+
+    }
+}
+```
+個々のWebアプリごとに設定する。例えば、入金後、商品の発送処理などの処理をする。   
+
+失敗イベント時の処理例 `app\Providers\AppServiceProvider.php`へ
+```php
+<?php
+
+namespace App\Providers;
+
+use Illuminate\Queue\Events\JobFailed;
+use Kaoken\VeritransJpAirWeb\Jobs\CVSDueDateHasPassedJob;
+use Kaoken\VeritransJpAirWeb\Jobs\CVSPaymentReceivedNotificationJob;
+use Kaoken\VeritransJpAirWeb\Jobs\PaymentNotificationJob;
+use Queue;
+use Illuminate\Support\ServiceProvider;
+
+class AppServiceProvider extends ServiceProvider
+{
+    public function boot()
+    {
+        Queue::failing(function (JobFailed $event){
+            // Air Web Veritrans Jp
+            if( $event->connectionName === 'payment' ){
+                $e = $event->exception;
+                $a['error']['msg'] = $e->getMessage();
+                $a['error']['code'] = $e->getCode();
+                $a['error']['file'] = $e->getFile();
+                $a['error']['line'] = $e->getLine();
+                $a['error']['trace'] = $e->getTrace();
+
+                if( $event->job instanceof CVSDueDateHasPassedJob){
+                    $a['obj'] = $event->job->obj;
+                    Log::error("Veritrans Jp コンビニ決済で、入金期日が過ぎた",$a);
+                }else if( $event->job instanceof CVSPaymentReceivedNotificationJob){
+                    $a['item'] = $event->job->items;
+                    Log::error("Veritrans Jp コンビニ入金通知",$a);
+                }else if( $event->job instanceof PaymentNotificationJob){
+                    $a['item'] = $event->job->items;
+                    Log::error("Veritrans Jp 決済完了通知",$a);
+                }
+            }
+        });
+    }
+}
+```
+ここでは、ログのみだが、失敗時メール送信なども・・・
 
 ## ライセンス
 

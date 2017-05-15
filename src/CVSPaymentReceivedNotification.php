@@ -71,7 +71,7 @@ trait CVSPaymentReceivedNotification
 //        }
         // </editor-fold>
         // コンビニ入金通知ジョブクラスの取得
-        $class = AirWeb::getCvsPaymentNotificationJobClass();
+        $class = AirWeb::getCVSPaymentNotificationJobClass();
 
         // 複数通知がある場合、分割する
         for($i=0;$i<$all['numberOfNotify'];$i++){
