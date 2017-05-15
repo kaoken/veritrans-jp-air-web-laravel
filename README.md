@@ -23,6 +23,8 @@ __コンテンツの一覧__
 - [コンフィグ](#コンフィグ)
 - [ミドルウェア](#ミドルウェア)
 - [イベント](#イベント)
+- [コントローラー](#コントローラー)
+- [ルート](#ルート)
 - [ライセンス](#ライセンス)
 
 ## インストール
@@ -277,8 +279,10 @@ use Illuminate\Queue\Events\JobFailed;
 use Kaoken\VeritransJpAirWeb\Jobs\CVSDueDateHasPassedJob;
 use Kaoken\VeritransJpAirWeb\Jobs\CVSPaymentReceivedNotificationJob;
 use Kaoken\VeritransJpAirWeb\Jobs\PaymentNotificationJob;
-use Queue;
 use Illuminate\Support\ServiceProvider;
+
+use Log;
+use Queue;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -309,7 +313,114 @@ class AppServiceProvider extends ServiceProvider
     }
 }
 ```
-ここでは、ログのみだが、失敗時メール送信なども・・・
+ここでは、ログのみだが、失敗時メール送信など追加してもよい。
+
+
+
+## コントローラー
+トレイトの`Kaoken\VeritransJpAirWeb\CVSPaymentReceivedNotification`と`Kaoken\VeritransJpAirWeb\PaymentNotification`
+を追加し、Veritans Jp Air Webからの通知受け取るようにする。
+
+下記は、`app\Http\Controllers\AirWebController.php`へ追加した例である。
+```php
+<?php
+/**
+ * Veritans Jp Air Web に関する処理
+ * @see https://air.veritrans.co.jp/map/settings/service_settings
+ */
+namespace App\Http\Controllers;
+
+use Log;
+use \Illuminate\Http\Request;
+use App\Library\Http\Controllers\Controller;
+use Kaoken\VeritransJpAirWeb\CVSPaymentReceivedNotification;
+use Kaoken\VeritransJpAirWeb\PaymentNotification;
+
+class AirWebController extends Controller
+{
+    use PaymentNotification, CVSPaymentReceivedNotification;
+
+    /**
+     * 決済完了通知
+     * @param Request $request
+     * @return \Illuminate\Contracts\Routing\ResponseFactory|\Symfony\Component\HttpFoundation\Response
+     */
+    public function postPaymentNotification(Request $request)
+    {
+        return $this->paymentNotification($request);
+    }
+
+
+    /**
+     * コンビニ入金通知
+     * @param Request $request
+     * @return \Illuminate\Contracts\Routing\ResponseFactory|\Symfony\Component\HttpFoundation\Response
+     */
+    public function postCVSPaymentReceivedNotification(Request $request)
+    {
+        return $this->cvsPaymentReceivedNotification($request);
+    }
+
+
+    /**
+     * 決済完了後の移動先
+     * @param Request $request
+     * @param int $threadId スレッドID
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
+    public function postFinishPayment(Request $request, $threadId)
+    {
+//        Log::info('決済完了後');
+        return redirect('/');
+    }
+
+    /**
+     * 未決済時の移動先
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
+    public function getUnFinishPayment(Request $request)
+    {
+        return redirect('/');
+
+    /**
+     * 決済エラー時の移動先
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
+    public function postErrorPayment(Request $request)
+    {
+        return redirect('/');
+    }
+}
+```
+
+## ルート
+[コントローラー](#コントローラー)の構成を元に作った例
+`routes\web.php`へ追加した例
+```php
+Route::group([
+        'middleware' => ['access_via_veritrans_jp']
+    ]
+    function() {
+        // 決済完了通知を受信するためのもの
+        Route::post('notification/handling','AirWebController@postPaymentNotification' );
+        // コンビニ入金通知を受信するためのもの
+        Route::post('cvs-payment-received','AirWebController@postCVSPaymentReceivedNotification' );
+    }
+);
+Route::group([],
+    function() {
+        // 正常に支払い手続きが終了した購入者へ表示するURL
+        Route::post('payment/finish','AirWebController@postFinishPayment' );
+        // 決済入力画面から「戻る」をクリックした購入者へ表示する
+        Route::get('payment/unfinish'AirWebController@getUnFinishPayment' );
+        // 正常に支払い手続きが終了しなかった購入者へ表示する
+        Route::post('payment/error','AirWebController@postErrorPayment' );
+    }
+);
+```
+ミドルウェアを使用しない場合は、ミドルウェア`access_via_veritrans_jp`を空に。
 
 ## ライセンス
 
