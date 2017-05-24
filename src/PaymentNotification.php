@@ -28,20 +28,20 @@ trait PaymentNotification
         $all = $request->all();
 
         // <editor-fold desc="Validatorは、後で削除するかもしれない">
-        $validator = Validator::make($all,[
-            'orderId' => 'required|max:100|regex:/^[-_\w]+$/',
-            'mStatus' => 'required|string|max:32|regex:/^[\w]+$/',
-            'vResultCode' => 'required|string|max:16|regex:/^[\w]+$/',
-            'mErrMsg' => 'required',
-            'merchantEncryptionKey' => 'required|regex:/^[-+_\w\/]+$/'
-        ]);
-        // merchantEncryptionKeyは、記号がさらに +/ が必要 Base64 フォーマットかな
-        if ($validator->fails()) {
-            $a['post'] = $all;
-            $a['error'] = $validator->errors()->all();
-            Log::error("Veritrans Jp 決済完了通知 [Validator]", $a);
-            return response('',400);
-        }
+//        $validator = Validator::make($all,[
+//            'orderId' => 'required|max:100|regex:/^[-_\w]+$/',
+//            'mStatus' => 'required|string|max:32|regex:/^[\w]+$/',
+//            'vResultCode' => 'required|string|max:16|regex:/^[\w]+$/',
+//            'mErrMsg' => 'required',
+//            'merchantEncryptionKey' => 'required|regex:/^[-+_\w\/]+$/'
+//        ]);
+//        // merchantEncryptionKeyは、記号がさらに +/ が必要 Base64 フォーマットかな
+//        if ($validator->fails()) {
+//            $a['post'] = $all;
+//            $a['error'] = $validator->errors()->all();
+//            Log::error("Veritrans Jp 決済完了通知 [Validator]", $a);
+//            return response('',400);
+//        }
         // </editor-fold>
 
 

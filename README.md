@@ -1,7 +1,7 @@
 # veritrans-jp-air-web-laravel
 
-[![TeamCity (simple build status)](https://img.shields.io/magnumci/ci/96ffb83fa700f069024921b0702e76ff/new-meta.svg)](https://github.com/kaoken/veritrans-jp-air-web-laravel)
-[![composer version](https://img.shields.io/badge/version-0.0.0-blue.svg)](https://github.com/kaoken/veritrans-jp-air-web-laravel)
+[![Travis](https://img.shields.io/travis/rust-lang/rust.svg)](https://github.com/kaoken/veritrans-jp-air-web-laravel)
+[![composer version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/kaoken/veritrans-jp-air-web-laravel)
 [![licence](https://img.shields.io/badge/licence-MIT-blue.svg)](https://github.com/kaoken/veritrans-jp-air-web-laravel)
 [![php version](https://img.shields.io/badge/php%20version-≧5.6.4-red.svg)](https://github.com/kaoken/veritrans-jp-air-web-laravel)
 [![laravel version](https://img.shields.io/badge/Laravel%20version-≧5.4-red.svg)](https://github.com/kaoken/veritrans-jp-air-web-laravel)
@@ -13,7 +13,7 @@
 * 実験的に作っている物なので、このライブラリを通告なしで突然削除するかもしれない。  
 * このライブラリに関して日本ベリトランスとは関係ないので、質問、お問い合わせをしないこと。  
 * 仕様上、カードとコンビニ決済は、同時に使用できない。決済方法 '00' がそれにあたる。
-* 今のところ詳しい使用方法は説明しない。
+* 今のところ詳しい使用(構築)方法は説明しない。
 
 
 __コンテンツの一覧__
@@ -34,7 +34,7 @@ __コンテンツの一覧__
 
 ```js
   "require": {
-    "kaoken/veritrans-jp-air-web-laravel":"dev-master"
+    "kaoken/veritrans-jp-air-web-laravel":"0.1.*"
   },
 ```
 

@@ -73,7 +73,7 @@ class CVSPaymentReceivedNotificationJob implements ShouldQueue
             $obj->order_id      = $this->items['orderId'];
             $obj->csv_type      = $this->items['cvsType'];
             $obj->receipt_no    = $this->items['receiptNo'];
-            $obj->receipt_date  = $this->items['receiptDate'];
+            $obj->receipt_date  = Carbon::createFromFormat('YmdHis', $this->items['receiptDate']);
             $obj->rcv_amount    = $this->items['rcvAmount'];
             $obj->dummy         = $this->items['dummy'];
             event(new CVSPaymentReceivedNotificationEvent($obj));
