@@ -52,7 +52,6 @@ class PaymentNotificationJob implements ShouldQueue
      */
     public function handle()
     {
-//        Log::info("Veritrans Jp 決済完了通知");
         DB::transaction(function() {
 
             $class = AirWeb::getPaymentNotificationClass();
@@ -70,7 +69,5 @@ class PaymentNotificationJob implements ShouldQueue
             event(new PaymentNotificationEvent($obj));
             $obj->save();
         });
-
-//        Log::info("Veritrans Jp 決済完了通知 正常終了");
     }
 }

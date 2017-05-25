@@ -1,7 +1,7 @@
 # veritrans-jp-air-web-laravel
 
-[![Travis](https://img.shields.io/travis/rust-lang/rust.svg)](https://github.com/kaoken/veritrans-jp-air-web-laravel)
-[![composer version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/kaoken/veritrans-jp-air-web-laravel)
+[![Travis branch](https://img.shields.io/travis/rust-lang/rust/master.svg)](https://github.com/kaoken/veritrans-jp-air-web-laravel)
+[![composer version](https://img.shields.io/badge/version-0.1.1-blue.svg)](https://github.com/kaoken/veritrans-jp-air-web-laravel)
 [![licence](https://img.shields.io/badge/licence-MIT-blue.svg)](https://github.com/kaoken/veritrans-jp-air-web-laravel)
 [![php version](https://img.shields.io/badge/php%20version-≧5.6.4-red.svg)](https://github.com/kaoken/veritrans-jp-air-web-laravel)
 [![laravel version](https://img.shields.io/badge/Laravel%20version-≧5.4-red.svg)](https://github.com/kaoken/veritrans-jp-air-web-laravel)
@@ -134,7 +134,9 @@ return [
     // 決済完了通知ジョブクラス
     'aw_payment_notification_job_class' =>  \Kaoken\VeritransJpAirWeb\Jobs\PaymentNotificationJob::class,
     // コンビニ入金通知ジョブクラス
-    'aw_cvs_payment_notification_job_class' =>  \Kaoken\VeritransJpAirWeb\Jobs\CVSPaymentReceivedNotificationJob::class
+    'aw_cvs_payment_notification_job_class' =>  \Kaoken\VeritransJpAirWeb\Jobs\CVSPaymentReceivedNotificationJob::class,
+    // コンビニ決済期日を過ぎたジョブクラス
+    'aw_cvs_due_date_has_passed_job_class' =>  \Kaoken\VeritransJpAirWeb\Jobs\CVSDueDateHasPassedJob::class
 ];
 ```
 ※ `aw_settlement_type`は、'00'選択不可能で、カードかコンビニのみ。
@@ -168,8 +170,9 @@ AW_CVS_PAYMENT_LIMIT=7
 * `AirWeb::deleteNoPaymentNotification($day=7)`は、
 現在から`$day`日過ぎた`air_web_payment`テーブルで 決済完了通知が届いていないレコードまたは、
 通知が着たが内容が失敗していた場合削除する。
-* `AirWeb::eventCVSPaymentReceivedNotification($day=1)`は、
-現在からコンビニ支払期日が`$day`日過ぎたジョブをキューに入れる。その後イベントが呼び出され、Webアプリごとに調整する。
+* `AirWeb::eventCVSPaymentReceivedNotification($day=0)`は、
+現在からコンビニ支払期日が`$day`日過ぎたジョブをキューに入れる。その後イベント`CVSDueDateHasPassedEvent`が呼び出され、
+Webアプリごとにリスナー部で任意の処理をする。`air_web_payment`テーブルのレコードは削除しない。
 
 
 ## ミドルウェア
@@ -237,6 +240,8 @@ class PaymentEventSubscriber
     /**
      * コンビニ入金期日を過ぎた
      * @param CVSDueDateHasPassed $event
+     * @see \Kaoken\VeritransJpAirWeb\Jobs\CVSDueDateHasPassedJob::handle()
+     * @throws \Exception
      */
     public function onCVSDueDateHasPassed(CVSDueDateHasPassed $event)
     {
@@ -246,6 +251,7 @@ class PaymentEventSubscriber
     /**
      * コンビニエンスストア、入金通知
      * @param CVSPaymentReceivedNotificationEvent $event
+     * @see \Kaoken\VeritransJpAirWeb\Jobs\CVSPaymentReceivedNotificationJob::handle()
      * @throws \Exception 
      * @note 例外後、`failed_jobs`テーブルへ追加される。
      */
@@ -258,6 +264,7 @@ class PaymentEventSubscriber
     /**
      * 決済完了通知
      * @param PaymentNotificationEvent $event
+     * @see \Kaoken\VeritransJpAirWeb\Jobs\PaymentNotificationJob::handle()
      * @throws \Exception
      */
     public function onPaymentNotification(PaymentNotificationEvent $event)

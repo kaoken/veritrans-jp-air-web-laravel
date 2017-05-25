@@ -6,6 +6,7 @@ namespace Kaoken\VeritransJpAirWeb\Jobs;
 
 
 use Illuminate\Database\Eloquent\Model;
+use Kaoken\VeritransJpAirWeb\Events\CVSDueDateHasPassedEvent;
 use Kaoken\VeritransJpAirWeb\Events\CVSPaymentReceivedNotificationEvent;
 use Kaoken\VeritransJpAirWeb\VeritransJpAirWebCVSPaymentNotification;
 
@@ -51,11 +52,8 @@ class CVSDueDateHasPassedJob implements ShouldQueue
      */
     public function handle()
     {
-//        Log::info("Veritrans Jp コンビニ決済で、入金期日が過ぎた");
         DB::transaction(function() {
-            event(new CVSDueDateHasPassed($obj));
+            event(new CVSDueDateHasPassedEvent($this->obj));
         });
-
-//        Log::info("Veritrans Jp コンビニ決済で、入金期日が過ぎた終了");
     }
 }

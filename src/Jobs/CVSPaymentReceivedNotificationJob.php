@@ -57,7 +57,6 @@ class CVSPaymentReceivedNotificationJob implements ShouldQueue
      */
     public function handle()
     {
-//        Log::info("Veritrans Jp コンビニ入金通知");
         DB::transaction(function() {
             $class = AirWeb::getCVSPaymentNotificationClass();
             // 既に通知済みの場合は、無視する

@@ -288,5 +288,14 @@ class VeritransJpAirWebManager extends Manager
     {
         return $this->getMyConfig('aw_cvs_payment_notification_job_class');
     }
+
+    /**
+     * コンビニ決済期日を過ぎたジョブクラスを返す
+     * @return string
+     */
+    public function getCVSDueDateHasPassedJobClass()
+    {
+        return $this->getMyConfig('aw_cvs_due_date_has_passed_job_class');
+    }
     // </editor-fold>
 }

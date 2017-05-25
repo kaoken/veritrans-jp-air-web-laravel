@@ -27,12 +27,28 @@ class VeritransJpAirWebCVSPaymentNotification extends Model
         'receipt_date'  // 消費者側で支払いが完了した時刻
     ];
 
+    /**
+     * コンビニエンスストアの正式の名前を返す
+     * @return string
+     */
+    public function cvsTypeName()
+    {
+        if($this->csv_type === "sej") return "セブン－イレブン";
+        elseif($this->csv_type === "econ-lw") return "ローソン";
+        else if($this->csv_type === "econ-fm") return "ファミリーマート";
+        elseif($this->csv_type === "econ-mini") return "ミニストップ";
+        elseif($this->csv_type === "econ-other") return "セイコーマート";
+        elseif($this->csv_type === "econ-ck") return "サークルK";
+        elseif($this->csv_type === "econ-sn") return "サンクス";
+        return "";
+    }
+
     // <editor-fold desc="リレーション定義">
     /**
      * AirWebの商品群
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function airWebCommodityRegister()
+    public function airWebPayment()
     {
         return $this->belongsTo(AirWeb::getPaymentClass(), 'order_id', 'order_id');
     }

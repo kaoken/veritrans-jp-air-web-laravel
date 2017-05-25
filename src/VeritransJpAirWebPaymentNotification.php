@@ -32,7 +32,7 @@ class VeritransJpAirWebPaymentNotification extends Model
      * AirWebの商品群
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function airWebCommodityRegister()
+    public function airWebPayment()
     {
         return $this->belongsTo(AirWeb::getPaymentClass(), 'order_id', 'order_id');
     }

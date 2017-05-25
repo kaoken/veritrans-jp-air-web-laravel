@@ -42,7 +42,6 @@ class VeritransJpAirWebScheduleTask
     public function deleteNoPaymentNotification($day=7)
     {
         $d = Carbon::now()->subDays($day);
-        //$d = Carbon::now()->subMinutes($day); // テスト
         $clCR = $this->mgr->getPaymentClass();
         $tblCR = (new $clCR())->getTable();
 
@@ -69,21 +68,23 @@ class VeritransJpAirWebScheduleTask
      *    })->dailyAt('00:00');
      *
      * のように追加する。
+     * @param int $day 期日に加算する値。デフォルトで0
+     * @note この時点で、レコードの削除はしないので、リスナー先で柵状等をすること。
      * @see \App\Console\Kernel
      * @see  CVSDueDateHasPassedJob
      */
-    public function queueCVSDueDateHasPassed($day=1)
+    public function queueCVSDueDateHasPassed($day=0)
     {
         $d = Carbon::now()->subDays($day);
         $clPayment = $this->mgr->getPaymentClass();
         $list = $clPayment::where('timelimit_of_payment','<',$d->format('Y-m-d'))
             ->whereNotNull('payment_notification_at')
             ->whereNull('cvs_notification_at')
-            ->whereIn('settlement_type',['02'])
+            ->where('settlement_type','02')
             ->get();
 
         // 期限切れを コンビニ通知期限切れジョブへ
-        $clCvsPN = $this->mgr->getCVSPaymentNotificationJobClass();
+        $clCvsPN = $this->mgr->getCVSDueDateHasPassedJobClass();
         foreach ($list as $item) {
             $job = new $clCvsPN($item);
             dispatch($job->onQueue('payment'));
