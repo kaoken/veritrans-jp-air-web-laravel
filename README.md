@@ -1,10 +1,9 @@
 # veritrans-jp-air-web-laravel
 
 [![Travis branch](https://img.shields.io/travis/rust-lang/rust/master.svg)](https://github.com/kaoken/veritrans-jp-air-web-laravel)
-[![composer version](https://img.shields.io/badge/version-0.1.1-blue.svg)](https://github.com/kaoken/veritrans-jp-air-web-laravel)
+[![composer version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/kaoken/veritrans-jp-air-web-laravel)
 [![licence](https://img.shields.io/badge/licence-MIT-blue.svg)](https://github.com/kaoken/veritrans-jp-air-web-laravel)
-[![php version](https://img.shields.io/badge/php%20version-≧5.6.4-red.svg)](https://github.com/kaoken/veritrans-jp-air-web-laravel)
-[![laravel version](https://img.shields.io/badge/Laravel%20version-≧5.4-red.svg)](https://github.com/kaoken/veritrans-jp-air-web-laravel)
+[![laravel version](https://img.shields.io/badge/Laravel%20version-≧5.5-red.svg)](https://github.com/kaoken/veritrans-jp-air-web-laravel)
 
 
 これは、[日本ベリトランス](https://www.veritrans.co.jp)の決済システム [AirWeb](https://www.veritrans.co.jp/developer/air/)をLaravelで使用するための物です。
